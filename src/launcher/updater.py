@@ -161,7 +161,9 @@ def extract_and_replace_windows(zip_path: Path, exe_path: Path) -> None:
         with zipfile.ZipFile(zip_path, "r") as zf:
             for info in zf.infolist():
                 target = (extract_dir / info.filename).resolve()
-                if not str(target).startswith(str(extract_dir.resolve())):
+                try:
+                    target.relative_to(extract_dir.resolve())
+                except ValueError:
                     raise RuntimeError(f"Unsafe path in zip: {info.filename}")
             zf.extractall(extract_dir)
 

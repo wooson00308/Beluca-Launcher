@@ -6,8 +6,9 @@ import logging
 import sys
 import tempfile
 from pathlib import Path
+from typing import Optional
 
-from PySide6.QtCore import QThread, Signal, Slot
+from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QApplication,
@@ -34,7 +35,7 @@ class _UpdateThread(QThread):
         version: str,
         download_url: str,
         app_path: str,
-        parent: QThread = None,
+        parent: Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
         self._version = version

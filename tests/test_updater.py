@@ -92,6 +92,16 @@ class TestExtractAndReplaceWindows:
         assert exe_path.read_bytes() == exe_content
         assert not zip_path.exists()  # 임시 zip 삭제됨
 
+    def test_extract_zipslip_raises(self, tmp_path: Path) -> None:
+        zip_path = tmp_path / "malicious.zip"
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            zf.writestr("../../../etc/passwd", "hacked")
+
+        exe_path = tmp_path / "BPE.exe"
+
+        with pytest.raises(RuntimeError, match="Unsafe path in zip"):
+            extract_and_replace_windows(zip_path, exe_path)
+
     def test_extract_no_exe_raises(self, tmp_path: Path) -> None:
         zip_path = tmp_path / "empty.zip"
         with zipfile.ZipFile(zip_path, "w") as zf:
