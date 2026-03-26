@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "beluca-launcher"
+dynamic = ["version"]
+description = "BPE 자동 업데이트 런처"
+requires-python = ">=3.9"
+dependencies = [
+    "PySide6>=6.5.0",
+    "certifi",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff",
+    "pyinstaller>=6.0",
+]
+
+[project.scripts]
+beluca-launcher = "launcher.__main__:main"
+
+[tool.hatch.version]
+path = "VERSION.txt"
+pattern = "(?P<version>.+)"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/launcher"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
