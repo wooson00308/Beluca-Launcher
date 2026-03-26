@@ -40,23 +40,34 @@ def download_asset(
 
     progress_cb는 0.0~1.0 범위로 호출된다.
     """
+    if not url.startswith("https://github.com/"):
+        raise ValueError(f"Untrusted download URL: {url}")
+
     ctx = _make_ssl_context()
     req = urllib.request.Request(url)
     req.add_header("User-Agent", "BPELauncher/1.0")
 
-    with urllib.request.urlopen(req, context=ctx) as resp:
-        total = int(resp.headers.get("Content-Length", 0))
-        downloaded = 0
+    tmp_dest = dest.with_suffix(dest.suffix + ".tmp")
+    try:
+        with urllib.request.urlopen(req, context=ctx) as resp:
+            total = int(resp.headers.get("Content-Length", 0))
+            downloaded = 0
 
-        with open(dest, "wb") as f:
-            while True:
-                chunk = resp.read(_CHUNK_SIZE)
-                if not chunk:
-                    break
-                f.write(chunk)
-                downloaded += len(chunk)
-                if progress_cb and total > 0:
-                    progress_cb(min(downloaded / total, 1.0))
+            with open(tmp_dest, "wb") as f:
+                while True:
+                    chunk = resp.read(_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if progress_cb and total > 0:
+                        progress_cb(min(downloaded / total, 1.0))
+
+        tmp_dest.rename(dest)
+    except Exception:
+        if tmp_dest.exists():
+            tmp_dest.unlink()
+        raise
 
     if progress_cb:
         progress_cb(1.0)
@@ -126,9 +137,11 @@ def extract_and_replace_macos(dmg_path: Path, app_path: Path) -> None:
 
     finally:
         subprocess.run(
-            ["hdiutil", "detach", str(mountpoint)],
+            ["hdiutil", "detach", str(mountpoint), "-force"],
             capture_output=True,
         )
+        if mountpoint.exists():
+            shutil.rmtree(mountpoint, ignore_errors=True)
 
     # quarantine 속성 제거
     subprocess.run(
@@ -146,6 +159,10 @@ def extract_and_replace_windows(zip_path: Path, exe_path: Path) -> None:
 
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
+            for info in zf.infolist():
+                target = (extract_dir / info.filename).resolve()
+                if not str(target).startswith(str(extract_dir.resolve())):
+                    raise RuntimeError(f"Unsafe path in zip: {info.filename}")
             zf.extractall(extract_dir)
 
         # zip 안에서 exe 찾기

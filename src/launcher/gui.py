@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QLabel,
     QProgressBar,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -158,6 +159,9 @@ class UpdateWindow(QWidget):
 
     def start_update(self, version: str, download_url: str, app_path: str) -> None:
         """업데이트를 시작한다."""
+        if self._worker and self._worker.isRunning():
+            return
+        self._app_path = app_path
         self._status.setText(f"v{version} 업데이트 중...")
         self._worker = _UpdateThread(version, download_url, app_path)
         self._worker.progress.connect(self._on_progress)
@@ -194,3 +198,26 @@ class UpdateWindow(QWidget):
                 }
                 """
             )
+            btn = QPushButton("BPE 실행")
+            btn.setStyleSheet(
+                f"""
+                QPushButton {{
+                    background-color: {self.ACCENT_COLOR};
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 8px 16px;
+                    font-size: 13px;
+                }}
+                QPushButton:hover {{
+                    background-color: #d07a20;
+                }}
+                """
+            )
+            btn.clicked.connect(self._launch_and_quit)
+            self.layout().addWidget(btn)
+
+    def _launch_and_quit(self) -> None:
+        """기존 BPE를 실행하고 런처를 종료한다."""
+        updater.launch_app(self._app_path)
+        QApplication.quit()

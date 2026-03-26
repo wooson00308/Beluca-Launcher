@@ -3,8 +3,6 @@
 
 from PyInstaller.utils.hooks import collect_data_files
 
-block_cipher = None
-
 certifi_datas = collect_data_files("certifi")
 
 a = Analysis(
@@ -23,11 +21,10 @@ a = Analysis(
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
 )
 
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure, a.zipped_data)
 
 exe = EXE(
     pyz,

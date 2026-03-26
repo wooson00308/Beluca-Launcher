@@ -47,7 +47,7 @@ class TestDownloadAsset:
 
         progress_values: list[float] = []
         result = download_asset(
-            "https://example.com/fake.dmg",
+            "https://github.com/fake.dmg",
             dest,
             progress_cb=progress_values.append,
         )
@@ -70,7 +70,7 @@ class TestDownloadAsset:
 
         monkeypatch.setattr("launcher.updater.urllib.request.urlopen", fake_urlopen)
 
-        result = download_asset("https://example.com/fake.bin", dest)
+        result = download_asset("https://github.com/fake.bin", dest)
         assert result == dest
         assert dest.read_bytes() == test_data
 
